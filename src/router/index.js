@@ -8,14 +8,9 @@ Vue.use(Router)
 export default new Router({
   routes: [
     {
-      path: '/',
+      path: '/:token',
       name: 'dashboard',
       component: Dashboard
-    },
-    {
-      path: '/signup',
-      name: 'signup',
-      component: Signup
     }
   ]
 })

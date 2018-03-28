@@ -1,73 +1,97 @@
 <template>
   <div class="dashboard">
     <h1>{{ msg }}</h1>
-    <div v-if="userExists">
-      Welcome {{ pseudo }}. Destroy your account by clicking <a href="#" @click="destroyAccount">here</a>.
-    </div>
-    <div v-else>Sign up <router-link to="/signup">here</router-link>.</div>
+    <md-button class="md-raised md-primary" href="http://localhost:8888/login">Login</md-button>
+    <md-button class="md-raised md-primary" @click="getNowPlaying">Get playing</md-button>
+    <div>{{ state.name }}</div>
   </div>
 </template>
 
 <script>
-import Users from '@/js/users'
-
-export default {
-  name: 'dashboard',
-  data () {
-    return {
-      msg: 'Welcome to your truffle-vue dApp',
-      pseudo: undefined
-    }
-  },
-  computed: {
-    userExists: function () {
-      return (typeof this.pseudo !== 'undefined')
-    }
-  },
-  beforeCreate: function () {
-    Users.init().then(() => {
-      Users.exists(window.web3.eth.accounts[0]).then((exists) => {
-        if (exists) {
-          Users.authenticate().then(pseudo => {
-            this.pseudo = pseudo
-          })
+  import Users from '@/js/users'
+  
+  import SpotifyWebApi from 'spotify-web-api-js'
+  const spotifyApi = new SpotifyWebApi()
+  
+  export default {
+    name: 'dashboard',
+    data() {
+      return {
+        msg: 'Welcome to your truffle-vue dApp',
+        pseudo: undefined,
+        state: undefined
+      }
+    },
+  
+    created: function() {
+      const params = this.getHashParams();
+      const token = params["/access_token"];
+      console.log(token)
+      if (token) {
+        console.log(token)
+        spotifyApi.setAccessToken(token);
+      }
+      this.state = {
+        loggedIn: token ? true : false,
+        nowPlaying: {
+          name: 'Not Checked',
+          albumArt: ''
         }
-      })
-    }).catch(err => {
-      console.log(err)
-    })
-  },
-  methods: {
-    destroyAccount: function (e) {
-      e.preventDefault()
-      Users.destroy().then(() => {
-        this.pseudo = undefined
-      }).catch(err => {
-        console.log(err)
-      })
+      }
+    },
+  
+    methods: {
+      login: function() {
+  
+      },
+  
+      getHashParams() {
+        var hashParams = {};
+        var e, r = /([^&;=]+)=?([^&;]*)/g,
+          q = window.location.hash.substring(1);
+        e = r.exec(q)
+        while (e) {
+          hashParams[e[1]] = decodeURIComponent(e[2]);
+          e = r.exec(q);
+        }
+        return hashParams;
+      },
+  
+  
+      getNowPlaying() {
+        spotifyApi.getMyCurrentPlaybackState()
+          .then((response) => {
+            this.state = {
+  
+              name: response.item.name,
+              albumArt: response.item.album.images[0].url
+  
+            }
+          })
+      }
     }
   }
-}
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-h1, h2 {
-  font-weight: normal;
-  display: block;
-}
-
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
-
-a {
-  color: #42b983;
-}
+  h1,
+  h2 {
+    font-weight: normal;
+    display: block;
+  }
+  
+  ul {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  li {
+    display: inline-block;
+    margin: 0 10px;
+  }
+  
+  a {
+    color: #42b983;
+  }
 </style>
