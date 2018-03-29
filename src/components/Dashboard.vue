@@ -2,7 +2,7 @@
   <div class="dashboard">
     <h1>{{ msg }}</h1>
     <md-button class="md-raised md-primary" href="http://localhost:8888/login">Login</md-button>
-    <md-button class="md-raised md-primary" @click="queueTrack()">Queue</md-button>
+    <md-button class="md-raised md-primary" @click="queueTrack()">Play</md-button>
     <md-field>
       <md-input v-model="trackURI"></md-input>
     </md-field>
@@ -22,7 +22,8 @@
         msg: 'Welcome to your truffle-vue dApp',
         pseudo: undefined,
         state: undefined,
-        trackURI: undefined
+        trackURI: undefined,
+        trackRequests: {}
       }
     },
 
@@ -54,13 +55,14 @@
 
       queueTrack: function() {
         var self = this
-        Jukebox.queueTrack("123", this.trackURI).then(async function() {
-            var response = await Jukebox.listenToQueueTrackEvent()
-            self.playTrack(response.args.trackURI)
+        Jukebox.queueTrack(self.trackURI).then(async function() {
+            var response = await Jukebox.listenToHasPayedEvent()
+            self.playTrack(response)
         })
       },
-  
+
       playTrack: function(trackURI) {
+        var self = this
         spotifyApi.play({
             "uris": [trackURI]
           })

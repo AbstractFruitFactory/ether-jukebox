@@ -23,24 +23,23 @@ const Jukebox = {
     })
   },
 
-  queueTrack(clientID, trackURI) {
+  queueTrack(trackURI) {
     let self = this
-
     return new Promise((resolve, reject) => {
-      self.instance.queueTrack(clientID, trackURI, { from: window.web3.eth.coinbase, gas: 2300000 }).then(function () {
+      self.instance.sendTransaction({ from: window.web3.eth.coinbase, to: self.instance.address, gas: 2300000, value: web3.toWei(0.1, "ether"), data: window.web3.toHex(trackURI)}).then(function () {
         resolve()
       })
     })
   },
 
-  listenToQueueTrackEvent: function () {
+  listenToHasPayedEvent: function () {
     let self = this
-    var queueEvent = self.instance.queuedTrack();
+    var hasPayedEvent = self.instance.hasPayed();
 
     return new Promise((resolve, reject) => {
-      queueEvent.watch(function (error, result) {
+      hasPayedEvent.watch(function (error, result) {
         if (!error)
-          resolve(result);
+          resolve(window.web3.toAscii(result.args.trackURI))
       })
     });
   }
