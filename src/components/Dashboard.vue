@@ -2,14 +2,16 @@
   <div class="dashboard">
     <h1>{{ msg }}</h1>
     <md-button class="md-raised md-primary" href="http://localhost:8888/login">Login</md-button>
-    <md-button class="md-raised md-primary" @click="getNowPlaying">Get playing</md-button>
+    <md-button class="md-raised md-primary" @click="queueTrack()">Queue</md-button>
+    <md-field>
+      <md-input v-model="trackURI"></md-input>
+    </md-field>
     <div>{{ state.name }}</div>
   </div>
 </template>
 
 <script>
-  import Users from '@/js/users'
-  
+  import Jukebox from '@/js/jukebox'
   import SpotifyWebApi from 'spotify-web-api-js'
   const spotifyApi = new SpotifyWebApi()
   
@@ -19,33 +21,26 @@
       return {
         msg: 'Welcome to your truffle-vue dApp',
         pseudo: undefined,
-        state: undefined
+        state: undefined,
+        trackURI: undefined
       }
     },
-  
+
     created: function() {
       const params = this.getHashParams();
       const token = params["/access_token"];
-      console.log(token)
       if (token) {
-        console.log(token)
         spotifyApi.setAccessToken(token);
       }
       this.state = {
         loggedIn: token ? true : false,
-        nowPlaying: {
-          name: 'Not Checked',
-          albumArt: ''
-        }
       }
+      Jukebox.init()
     },
   
     methods: {
-      login: function() {
   
-      },
-  
-      getHashParams() {
+      getHashParams: function() {
         var hashParams = {};
         var e, r = /([^&;=]+)=?([^&;]*)/g,
           q = window.location.hash.substring(1);
@@ -56,24 +51,27 @@
         }
         return hashParams;
       },
+
+      queueTrack: function() {
+        var self = this
+        Jukebox.queueTrack("123", this.trackURI).then(async function() {
+            var response = await Jukebox.listenToQueueTrackEvent()
+            self.playTrack(response.args.trackURI)
+        })
+      },
   
-  
-      getNowPlaying() {
-        spotifyApi.getMyCurrentPlaybackState()
+      playTrack: function(trackURI) {
+        spotifyApi.play({
+            "uris": [trackURI]
+          })
           .then((response) => {
-            this.state = {
-  
-              name: response.item.name,
-              albumArt: response.item.album.images[0].url
-  
-            }
+            console.log(response)
           })
       }
     }
   }
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
   h1,
   h2 {

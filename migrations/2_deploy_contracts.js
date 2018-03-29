@@ -1,5 +1,5 @@
-var Users = artifacts.require("./Users.sol");
+var Jukebox = artifacts.require("./Jukebox.sol");
 
 module.exports = function(deployer) {
-  deployer.deploy(Users);
+  deployer.deploy(Jukebox);
 };
