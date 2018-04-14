@@ -1,6 +1,5 @@
 <template>
   <div class="dashboard">
-    <h1>{{ msg }}</h1>
     <md-button class="md-raised md-primary" href="http://localhost:8888/login">Login</md-button>
     <md-button class="md-raised md-primary" @click="queueTrack()">Play</md-button>
     <md-field>
@@ -19,9 +18,9 @@
     name: 'dashboard',
     data() {
       return {
-        msg: 'Welcome to your truffle-vue dApp',
         pseudo: undefined,
         state: undefined,
+        clientID: undefined,
         trackURI: undefined,
         trackRequests: {}
       }

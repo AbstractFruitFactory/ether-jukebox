@@ -27,6 +27,12 @@ module.exports = {
       '@contracts' : resolve('build/contracts')
     }
   },
+  node: {
+    console: false,
+    fs: 'empty',
+    net: 'empty',
+    tls: 'empty'
+  },
   module: {
     rules: [
      /* {
