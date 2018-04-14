@@ -20,7 +20,7 @@
       return {
         pseudo: undefined,
         state: undefined,
-        clientID: undefined,
+        userID: undefined,
         trackURI: undefined,
         trackRequests: {}
       }
@@ -54,7 +54,10 @@
 
       queueTrack: function() {
         var self = this
-        Jukebox.queueTrack(self.trackURI).then(async function() {
+        spotifyApi.getMe().then(function(result) {
+          self.userID = result.id
+        })
+        Jukebox.queueTrack(self.userID, self.trackURI).then(async function() {
             var response = await Jukebox.listenToHasPayedEvent()
             self.playTrack(response)
         })
