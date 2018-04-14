@@ -18,6 +18,7 @@
   "dependencies": {
     "cookie-parser": "^1.4.3",
     "request": "^2.85.0",
+    "request-promise": "^4.2.2",
     "spotify-web-api-js": "^0.23.0",
     "truffle-contract": "^3.0.0",
     "vue": "^2.4.2",

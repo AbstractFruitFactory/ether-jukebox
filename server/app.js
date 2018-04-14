@@ -20,6 +20,10 @@ var generateRandomString = function(length) {
 
 var stateKey = 'spotify_auth_state';
 
+var trackChannels = {
+  "0xaa588d3737b611bafd7bd713445b314bd453a5c8": undefined
+}
+
 app.use(express.static(__dirname + '/public'))
    .use(cookieParser());
 
@@ -125,6 +129,19 @@ app.get('/refresh_token', function(req, res) {
     }
   });
 });
+
+app.get('/useTrackChannel/:trackURI', function(req, res) {
+  Object.keys(trackChannels).map(address => {
+    if(trackChannels[address] == undefined) {
+      trackChannels[address] = req.params.trackURI
+      res.json({
+        trackChannel: address
+      })
+      res.end();
+    }
+  })
+  res.sendStatus(500)
+})
 
 console.log('Listening on 8888');
 app.listen(8888);

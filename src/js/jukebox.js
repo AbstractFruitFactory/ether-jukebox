@@ -35,7 +35,7 @@ const Jukebox = {
 
   listenToQueueTrackEvent: function () {
     let self = this
-    var queueEvent = self.instance.queuedTrack();
+    var queueEvent = self.instance.nextQueuedTrack();
 
     return new Promise((resolve, reject) => {
       queueEvent.watch(function (error, result) {
