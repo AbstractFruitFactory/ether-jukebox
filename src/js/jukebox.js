@@ -37,16 +37,12 @@ const Jukebox = {
 
   queueTrack(clientAddress, trackURI) {
     let self = this
-<<<<<<< HEAD
-    var queueEvent = self.instance.nextQueuedTrack();
-=======
     return new Promise((resolve, reject) => {
       self.instance.queueTrack.sendTransaction(clientAddress, trackURI, { from: window.web3.eth.coinbase, to: self.instance.address, gas: 2300000, value: web3.toWei(0.1, "ether") }).then(function (hash) {
         resolve(hash)
       })
     })
   },
->>>>>>> centralized
 
   listenToEvent: function (clientAddress, counter) {
     let self = this
