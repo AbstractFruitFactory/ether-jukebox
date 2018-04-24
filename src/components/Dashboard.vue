@@ -5,7 +5,7 @@
         <v-inner-text>
           <v-btn @click="signClientID()">Sign</v-btn>
           <v-btn @click="startHosting()">Host</v-btn>
-          <v-btn @click="stopHosting = true">Stop</v-btn>
+          <v-btn @click="stopHosting()">Stop</v-btn>
         </v-inner-text>
       </v-card>
     </v-dialog>
@@ -43,7 +43,6 @@
         trackRequests: {},
         token: undefined,
         params: undefined,
-        stopHosting: false
       }
       return hashParams;
     },
@@ -82,7 +81,7 @@
   
         var options = {
           method: 'POST',
-          uri: 'http://localhost:8888/clientaddress',
+          uri: 'http://192.168.0.3:8888/clientaddress',
           body: {
             id: clientId
           },
@@ -98,7 +97,7 @@
             })
           })
           .catch(function(err) {
-            console.log(err)
+            console.log(err.message)
           });
       },
   
@@ -162,7 +161,6 @@
   
       startHosting: function() {
         let self = this
-
         spotifyApi.getMe().then(function(result) {
           var options = {
             method: 'POST',
@@ -183,16 +181,60 @@
         })
       },
   
+      stopHosting: function() {
+        let self = this
+        spotifyApi.getMe().then(function(result) {
+          var options = {
+            method: 'POST',
+            uri: 'http://localhost:8888/stop',
+            body: {
+              id: result.id,
+              token: self.token
+            },
+            json: true
+          };
+          rp(options)
+        })
+      },
+  
       watchStop: function(callback) {
         let self = this
-        if (self.stopHosting == true) {
-          self.stopHosting = false
-          callback()
-        } else {
-          window.setTimeout(function() {
-            self.watchStop(callback);
-          }, 1000);
-        }
+        spotifyApi.getMe().then(function(result) {
+          var options = {
+            method: 'POST',
+            uri: 'http://localhost:8888/ishosting',
+            body: {
+              id: result.id,
+            },
+            json: true
+          };
+          rp(options)
+            .then(function(isHosting) {
+              if (isHosting == false) {
+                spotifyApi.getMe().then(function(result) {
+                  var options = {
+                    method: 'POST',
+                    uri: 'http://localhost:8888/stop',
+                    body: {
+                      id: result.id,
+                      token: self.token
+                    },
+                    json: true
+                  };
+                  rp(options)
+                })
+                callback()
+              } else {
+                window.setTimeout(function() {
+                  self.watchStop(callback);
+                }, 1000);
+              }
+            })
+            .catch(function(err) {
+              console.log(err)
+            });
+        })
+  
       },
   
       listenToEvent: function(clientAddress) {

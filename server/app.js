@@ -170,6 +170,10 @@ app.post('/send', function (req, res) {
   })
 })
 
+app.post('/ishosting', function(req, res) {
+  res.send(isHosting[req.body.id])
+})
+
 app.post('/host', function (req, res) {
   console.log("host")
   authorizeClient(req.body.id, req.body.token).then(function() {
@@ -187,7 +191,11 @@ app.post('/stop', function (req, res) {
 })
 
 app.post('/clientaddress', function (req, res) {
-  res.send(clients[req.body.id])
+  if(isHosting[req.body.id]) {
+    res.send(clients[req.body.id])
+  } else {
+    throw "Client not hosting."
+  }
 })
 
 app.get('/refresh_token', function (req, res) {
