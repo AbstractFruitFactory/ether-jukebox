@@ -1,26 +1,41 @@
 <template>
   <v-app id="app" dark>
-    <v-dialog v-model="showHostDialog">
+    <v-container grid-list-md text-xs-center >
+      <v-layout row wrap>
+        <v-flex>
+          <v-card width="500px" height="800px">
+            <v-btn @click="showHostDialog = true">Host Jukebox</v-btn>
+            <v-btn href="http://localhost:8888/login">Login</v-btn>
+            <v-btn @click="showQueueDialog = true">Queue</v-btn>
+          </v-card>
+        </v-flex>
+      </v-layout>
+    </v-container>
+  
+    <v-dialog v-model="showHostDialog" max-width="500px">
       <v-card>
-        <v-inner-text>
+        <v-card-title>
+          Host client
+        </v-card-title>
+        <v-card-text>
           <v-btn @click="signClientID()">Sign</v-btn>
           <v-btn @click="startHosting()">Host</v-btn>
           <v-btn @click="stopHosting()">Stop</v-btn>
-        </v-inner-text>
+        </v-card-text>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="showQueueDialog">
+    <v-dialog v-model="showQueueDialog" max-width="500px">
       <v-card>
-        <v-inner-text>
+        <v-card-title>
+          Queue track
+        </v-card-title>
+        <v-card-text>
           <v-text-field v-model="clientId" label="Client ID"></v-text-field>
           <v-text-field v-model="trackURI" label="Track URI"></v-text-field>
           <v-btn @click="queueTrack()">Queue</v-btn>
-        </v-inner-text>
+        </v-card-text>
       </v-card>
     </v-dialog>
-    <v-btn @click="showHostDialog = true">Host Jukebox</v-btn>
-    <v-btn href="http://localhost:8888/login">Login</v-btn>
-    <v-btn @click="showQueueDialog = true">Queue</v-btn>
   </v-app>
 </template>
 
