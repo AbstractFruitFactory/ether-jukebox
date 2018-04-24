@@ -1,5 +1,6 @@
 import contract from 'truffle-contract'
 import JukeboxContract from '../../build/contracts/Jukebox.json'
+var rp = require('request-promise')
 
 const Jukebox = {
 
@@ -55,11 +56,10 @@ const Jukebox = {
             trackURI: result.args.trackURI
           })
       });
-    },
-    )
+    })
   },
 
-  getCounter: function(clientAddress) {
+  getCounter: function (clientAddress) {
     let self = this
     return new Promise((resolve, reject) => {
       self.instance.getCounter(clientAddress, { from: window.web3.eth.coinbase, gas: 2300000 }).then(function (counter) {

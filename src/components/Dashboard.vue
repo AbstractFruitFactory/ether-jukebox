@@ -4,7 +4,8 @@
       <v-card>
         <v-inner-text>
           <v-btn @click="signClientID()">Sign</v-btn>
-          <v-btn @click="host()">Host</v-btn>
+          <v-btn @click="startHosting()">Host</v-btn>
+          <v-btn @click="stopHosting = true">Stop</v-btn>
         </v-inner-text>
       </v-card>
     </v-dialog>
@@ -20,7 +21,6 @@
     <v-btn @click="showHostDialog = true">Host Jukebox</v-btn>
     <v-btn href="http://localhost:8888/login">Login</v-btn>
     <v-btn @click="showQueueDialog = true">Queue</v-btn>
-    <div>{{ state.name }}</div>
   </v-app>
 </template>
 
@@ -29,7 +29,7 @@
   import SpotifyWebApi from 'spotify-web-api-js'
   const spotifyApi = new SpotifyWebApi()
   var rp = require('request-promise')
-
+  
   
   export default {
     name: 'dashboard',
@@ -42,19 +42,21 @@
         clientId: undefined,
         trackRequests: {},
         token: undefined,
-        params: undefined
+        params: undefined,
+        stopHosting: false
       }
       return hashParams;
     },
   
-    created: function() {
-      self.params = this.getHashParams();
+    mounted: function() {
+      let self = this
+      self.params = self.getHashParams();
       self.token = self.params["/access_token"];
       if (self.token) {
         spotifyApi.setAccessToken(self.token);
       }
-      this.state = {
-        loggedIn: token ? true : false,
+      self.state = {
+        loggedIn: self.token ? true : false,
       }
       Jukebox.init()
     },
@@ -80,7 +82,7 @@
   
         var options = {
           method: 'POST',
-          uri: 'http://localhost:8888/clientid',
+          uri: 'http://localhost:8888/clientaddress',
           body: {
             id: clientId
           },
@@ -122,6 +124,7 @@
       },
   
       signClientID: function() {
+        let self = this
         let message = [{
           type: 'string',
           name: 'ID',
@@ -131,6 +134,7 @@
       },
   
       signMsg: function(msgParams, from) {
+        let self = this
         window.web3.currentProvider.sendAsync({
           method: 'eth_signTypedData',
           params: [msgParams, from],
@@ -152,30 +156,23 @@
             },
             json: true
           };
-  
           rp(options)
-            .then(function(parsedBody) {
-              console.log(parsedBody)
-            })
-            .catch(function(err) {
-              console.log(err)
-            });
         })
       },
   
-      host: function() {
+      startHosting: function() {
         let self = this
-  
+
         spotifyApi.getMe().then(function(result) {
           var options = {
             method: 'POST',
-            uri: 'http://localhost:8888/clientid',
+            uri: 'http://localhost:8888/host',
             body: {
-              id: result.id
+              id: result.id,
+              token: self.token
             },
             json: true
           };
-  
           rp(options)
             .then(function(clientAddress) {
               self.listenToEvent(clientAddress)
@@ -186,14 +183,36 @@
         })
       },
   
+      watchStop: function(callback) {
+        let self = this
+        if (self.stopHosting == true) {
+          self.stopHosting = false
+          callback()
+        } else {
+          window.setTimeout(function() {
+            self.watchStop(callback);
+          }, 1000);
+        }
+      },
+  
       listenToEvent: function(clientAddress) {
         let self = this
         Jukebox.getCounter(clientAddress).then(function(counter) {
-          Jukebox.listenToEvent(clientAddress, counter.add(1)).then(function(result) {
-            self.playTrack(result.trackURI).then(function(res) {
-              self.listenToEvent(clientAddress)
+          var listen = Jukebox.listenToEvent(clientAddress, counter.add(1))
+          var stop = new Promise((resolve, reject) => {
+            self.watchStop(function() {
+              reject()
             })
           })
+  
+          Promise.race([listen, stop]).then(function(result) {
+              self.playTrack(result.trackURI).then(function(res) {
+                self.listenToEvent(clientAddress)
+              })
+            },
+            function() {
+              console.log("Stopped.")
+            })
         })
       },
   
@@ -210,31 +229,30 @@
       }
     }
   }
-};
 </script>
 
 <style scoped>
-h1,
-h2 {
-  font-weight: normal;
-  display: block;
-}
-
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
-
-a {
-  color: #42b983;
-}
-
-.dialog {
-  padding: 30px;
-}
+  h1,
+  h2 {
+    font-weight: normal;
+    display: block;
+  }
+  
+  ul {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  li {
+    display: inline-block;
+    margin: 0 10px;
+  }
+  
+  a {
+    color: #42b983;
+  }
+  
+  .dialog {
+    padding: 30px;
+  }
 </style>

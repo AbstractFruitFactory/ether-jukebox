@@ -30,6 +30,44 @@ var stateKey = 'spotify_auth_state';
 
 var clients = {}
 var access_tokens = {}
+var isHosting = {}
+
+function authorizeAddress(data, msg, address) {
+  return new Promise((resolve, reject) => {
+    const recovered = sigUtil.recoverTypedSignature({
+      data: data,
+      sig: msg
+    })
+    if (recovered === address) {
+      console.log('Recovered signer: ' + recovered)
+      resolve(recovered)
+    } else {
+      console.log('Invalid signature.')
+      reject()
+    }
+  })
+}
+
+function authorizeClient(id, token) {
+  return new Promise((resolve, reject) => {
+    var options = {
+      url: 'https://api.spotify.com/v1/me',
+      headers: { 'Authorization': 'Bearer ' + token },
+      json: true
+    };
+
+    request.get(options, function (error, response, body) {
+      if (body.id == id) {
+        console.log("Authorization successful.")
+        resolve()
+      } else {
+        console.log("Authorization failed.")
+        reject()
+      }
+    })
+  })
+}
+
 
 app.use(bodyParser.json());
 
@@ -124,43 +162,32 @@ app.get('/callback', function (req, res) {
 });
 
 app.post('/send', function (req, res) {
-  const recovered = sigUtil.recoverTypedSignature({
-    data: req.body.data,
-    sig: req.body.msg
+  authorizeClient(req.body.data[0].value, req.body.token).then(function () {
+    authorizeAddress(req.body.data, req.body.msg, req.body.from).then(function (recovered) {
+      clients[req.body.data[0].value] = recovered
+      res.end()
+    })
   })
-  if (recovered === req.body.from) {
-    console.log('Recovered signer: ' + recovered)
-
-    var options = {
-      url: 'https://api.spotify.com/v1/me',
-      headers: { 'Authorization': 'Bearer ' + req.body.token },
-      json: true
-    };
-
-    request.get(options, function (error, response, body) {
-      if(body.id == req.body.data[0].value) {
-        console.log("Authorization successful.")
-        clients[body.id] = recovered
-      }
-    });
-
-  } else {
-    console.log('Invalid signature.')
-  }
 })
 
-app.post('/clientid', function(req, res) {
+app.post('/host', function (req, res) {
+  console.log("host")
+  authorizeClient(req.body.id, req.body.token).then(function() {
+    isHosting[req.body.id] = true
+    res.send(clients[req.body.id])
+  })
+})
+
+app.post('/stop', function (req, res) {
+  console.log("stop")
+  authorizeClient(req.body.id, req.body.token).then(function() {
+    isHosting[req.body.id] = false
+    res.send(clients[req.body.id])
+  })
+})
+
+app.post('/clientaddress', function (req, res) {
   res.send(clients[req.body.id])
-})
-
-app.post('/queue', function(req, res) {
-  spotifyApi.setAccessToken(access_tokens[clients[req.body.address]]);
-  spotifyApi.play({
-    "uris": [req.body.track]
-  })
-  .then((response) => {
-    res.send(response)
-  })
 })
 
 app.get('/refresh_token', function (req, res) {
